@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>جدول الاختبارات - الهندسة الكهربائية</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg0:#050814; --bg1:#0a1230;
+      --panel:#0b1636; --panel2:#0d1f46;
+      --stroke:rgba(255,255,255,.08); --soft:rgba(255,255,255,.06);
+      --text:#eaf0ff; --muted:rgba(234,240,255,.65);
+      --ee-blue:#2f7bff; --ee-cyan:#48ffe8; --ee-lime:#57ff7a;
+      --ee-amber:#ffcc66; --ee-red:#ff4d6d;
+      --shadow: 0 24px 70px rgba(0,0,0,.55);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Tajawal", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 70% 0%, rgba(47,123,255,.22), transparent 60%),
+        radial-gradient(900px 520px at 10% 20%, rgba(72,255,232,.12), transparent 55%),
+        linear-gradient(180deg, var(--bg0), #050816 60%, #040610);
+      color:var(--text);
+      min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      padding:18px;
+    }
+
+    .app{
+      width:min(920px, 100%);
+      background: linear-gradient(180deg, rgba(11,22,54,.86), rgba(11,22,54,.74));
+      border:1px solid var(--stroke); border-radius:22px;
+      box-shadow: 0 30px 90px rgba(0,0,0,.58), 0 0 0 1px rgba(72,255,232,.08) inset;
+      overflow:hidden; backdrop-filter: blur(10px);
+    }
+
+    .top{
+      padding:18px 18px 14px;
+      border-bottom:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(13,31,70,.58), rgba(11,22,54,0));
+    }
+
+    .title{
+      margin:0 0 6px; font-weight:900; letter-spacing:.2px; font-size:18px;
+      color:var(--text); display:flex; align-items:center; gap:10px;
+      text-shadow: 0 0 18px rgba(72,255,232,.14);
+    }
+
+    .subtitle{
+      margin:0 0 12px; color:rgba(234,240,255,.6);
+      font-weight:800; letter-spacing:.2px;
+    }
+
+    .badge{
+      font-size:12px; font-weight:900; padding:4px 10px; border-radius:999px;
+      background: linear-gradient(180deg, rgba(47,123,255,.18), rgba(72,255,232,.10));
+      border:1px solid rgba(72,255,232,.25);
+      color:rgba(234,240,255,.92);
+    }
+
+    .controls{
+      display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center;
+    }
+
+    .input{
+      display:flex; gap:10px; align-items:center;
+      padding:10px 12px; border-radius:16px;
+      background: rgba(255,255,255,.05); border:1px solid var(--stroke);
+    }
+
+    .input label{
+      font-size:13px; font-weight:800; color:var(--muted); white-space:nowrap;
+    }
+
+    .input input{
+      width:100%; background:transparent; border:0; outline:0;
+      color:var(--text); font-weight:900; font-size:16px; letter-spacing:.5px;
+      font-family: inherit;
+    }
+
+    .btn{
+      border:0; cursor:pointer; font-family:inherit;
+      padding:12px 14px; border-radius:16px; font-weight:1000; color:#071022;
+      background: linear-gradient(180deg, rgba(72,255,232,1), rgba(47,123,255,.85));
+      box-shadow: 0 14px 30px rgba(72,255,232,.18), 0 0 0 1px rgba(72,255,232,.12) inset;
+      transition:.15s transform ease, .15s filter ease; white-space:nowrap;
+    }
+    .btn:active{ transform: translateY(1px); filter:saturate(.95) }
+    .btn:hover{ filter:saturate(1.08) }
+    .btn:disabled{ opacity:.5; cursor:wait; }
+
+    /* 🌟 معلومات الطالب */
+    .student-info{
+      margin: 12px 0 0;
+      padding: 12px 14px;
+      background: linear-gradient(180deg, rgba(72,255,232,.06), rgba(47,123,255,.04));
+      border: 1px solid rgba(72,255,232,.15);
+      border-radius: 14px;
+      display: none;
+      animation: slideIn .4s ease;
+    }
+    .student-info.show{ display:block; }
+    .student-info .name{
+      color: var(--ee-cyan); font-size:15px; font-weight:1000;
+      letter-spacing:.3px; margin-bottom:4px;
+    }
+    .student-info .meta{
+      color: var(--muted); font-size:12px; font-weight:700;
+      display:flex; gap:14px; flex-wrap:wrap;
+    }
+    .student-info .meta span{ display:inline-flex; align-items:center; gap:5px; }
+    @keyframes slideIn { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform: translateY(0); } }
+
+    /* 🌟 إحصائيات سريعة */
+    .stats-bar{
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 12px 0 0;
+    }
+    .stat-card{
+      padding: 10px 8px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      text-align: center;
+    }
+    .stat-card .num{
+      font-size: 20px; font-weight: 1000; color: var(--ee-amber);
+      line-height: 1;
+    }
+    .stat-card .lbl{
+      font-size: 10px; font-weight: 800;
+      color: var(--muted); margin-top: 4px;
+      letter-spacing: .3px;
+    }
+
+    /* 🌟 شريط العداد التنازلي */
+    .countdown{
+      margin: 12px 0 0;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, rgba(255,77,109,.12), rgba(255,204,102,.08));
+      border: 1px solid rgba(255,77,109,.25);
+      border-radius: 14px;
+      text-align: center;
+      font-weight: 900;
+      font-size: 13px;
+      color: var(--text);
+      display: none;
+    }
+    .countdown.show{ display:block; }
+    .countdown b{ color: var(--ee-amber); }
+    .countdown .code{ color: var(--ee-cyan); }
+
+    .results-wrap{ padding: 14px 18px 18px; }
+
+    .results{
+      background: radial-gradient(900px 200px at 50% 0%, rgba(255,255,255,.06), transparent 65%),
+                  linear-gradient(180deg, rgba(13,31,70,.56), rgba(10,18,48,.36));
+      border:1px solid var(--stroke); border-radius:18px; overflow:hidden;
+    }
+
+    .r-head{
+      display:grid;
+      grid-template-columns: 1.1fr 1.05fr 1fr 1.05fr .9fr .9fr;
+      gap:8px; padding:12px;
+      background: rgba(0,0,0,.10); border-bottom:1px solid var(--stroke);
+    }
+
+    .h-pill{
+      text-align:center; padding:10px 6px; border-radius:999px;
+      background: linear-gradient(180deg, rgba(10,16,36,.72), rgba(10,16,36,.45));
+      border:1px solid rgba(72,255,232,.12);
+      color: rgba(72,255,232,.92);
+      font-weight:1000; font-size:12px;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+    }
+
+    .r-body{
+      padding: 10px 12px 14px;
+      display:flex; flex-direction:column; gap:10px;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1.1fr 1.05fr 1fr 1.05fr .9fr .9fr;
+      gap:8px; align-items:center;
+      padding:12px 8px; border-radius:16px;
+      background:
+        radial-gradient(600px 120px at 50% 0%, rgba(72,255,232,.06), transparent 60%),
+        rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      transition: .12s border-color ease, .12s background ease;
+    }
+    .row:hover{
+      border-color: rgba(72,255,232,.16);
+      background:
+        radial-gradient(600px 120px at 50% 0%, rgba(72,255,232,.085), transparent 60%),
+        rgba(255,255,255,.045);
+    }
+
+    /* 🌟 صف اليوم — تنبيه أحمر */
+    .row.today{
+      border-color: rgba(255,77,109,.4);
+      background:
+        radial-gradient(600px 120px at 50% 0%, rgba(255,77,109,.18), transparent 60%),
+        rgba(255,77,109,.06);
+      box-shadow: 0 0 24px rgba(255,77,109,.12);
+    }
+    .row.today .course{ color: var(--ee-red); }
+
+    /* 🌟 صف الاختبار القريب — تنبيه برتقالي */
+    .row.soon{
+      border-color: rgba(255,159,67,.3);
+    }
+
+    /* 🌟 صف الاختبار المنتهي */
+    .row.past{ opacity: .45; }
+    .row.past::before{
+      content: "✓ منتهي";
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      font-size: 9px; color: var(--muted); font-weight: 800;
+    }
+
+    .cell{ text-align:center; font-weight:1000; line-height:1.15; }
+
+    .course-cell{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .course{ color: var(--ee-amber); font-size:15px; letter-spacing:.35px; }
+    .course-name{ color: var(--muted); font-size: 9px; font-weight: 700; opacity: .8;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .date-top{ color: var(--ee-cyan); font-size:14px; opacity:.95 }
+    .date-bot{ color: var(--ee-lime); font-size:11px; font-weight:1000 }
+
+    .t-top{ color: var(--ee-amber); font-size:13px; letter-spacing:.3px }
+    .t-bot{ color: var(--ee-red); font-size:13px; opacity:.95 }
+
+    .duration{ color: rgba(234,240,255,.76); font-size:13px; font-weight:900 }
+    .venue{
+      color: var(--ee-blue); font-size:13px;
+      text-shadow: 0 0 14px rgba(47,123,255,.12);
+      font-weight: 1000;
+    }
+
+    /* 🌟 وسم اليوم المتبقي */
+    .days-tag{
+      display: inline-block;
+      font-size: 9px; font-weight: 900;
+      padding: 2px 7px; border-radius: 20px;
+      margin-top: 4px;
+    }
+    .days-tag.danger{ background: rgba(255,77,109,.2); color: var(--ee-red); border: 1px solid rgba(255,77,109,.35); }
+    .days-tag.warn{ background: rgba(255,159,67,.15); color: #ff9f43; border: 1px solid rgba(255,159,67,.3); }
+    .days-tag.ok{ background: rgba(87,255,122,.12); color: var(--ee-lime); border: 1px solid rgba(87,255,122,.25); }
+
+    .two{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+
+    .empty{
+      padding:30px 18px; text-align:center;
+      color:rgba(234,240,255,.75); font-weight:900;
+    }
+    .empty i{
+      display:block; font-size:32px; margin-bottom:10px;
+      opacity:.4;
+    }
+
+    .spinner{
+      display:inline-block; width:14px; height:14px;
+      border: 2px solid rgba(72,255,232,.2);
+      border-top-color: var(--ee-cyan);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      vertical-align: middle; margin-left: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 560px){
+      body{ padding:10px; }
+      .top{ padding:14px 14px 12px; }
+      .title{ font-size:16px; }
+      .controls{ grid-template-columns: 1fr; }
+      .btn{ width:100%; }
+
+      .stats-bar{ gap: 6px; }
+      .stat-card{ padding: 8px 4px; }
+      .stat-card .num{ font-size: 16px; }
+      .stat-card .lbl{ font-size: 9px; }
+
+      .results-wrap{ padding: 10px 12px 12px; }
+
+      .r-head, .row{
+        gap: 4px;
+        grid-template-columns: 1.1fr .9fr 1fr 1fr .8fr .85fr;
+      }
+      .h-pill{ padding:7px 3px; font-size:9px; }
+      .row{ padding:10px 4px; }
+
+      .course{ font-size:12px; }
+      .course-name{ font-size: 8px; }
+      .venue{ font-size:11px; }
+      .duration{ font-size:11px; }
+      .date-top, .t-top{ font-size:11px; }
+      .date-bot, .t-bot{ font-size:10px; }
+      .days-tag{ font-size: 8px; padding: 1px 5px; }
+    }
+
+    @media (max-width: 390px){
+      .r-head, .row{ gap:3px; }
+      .h-pill{ font-size:8px; padding:6px 2px; }
+      .course{ font-size:11px; }
+      .course-name{ display: none; }
+      .date-top, .t-top{ font-size:10px; }
+      .date-bot, .t-bot{ font-size:9px; }
+      .venue{ font-size:10px; }
+      .duration{ font-size:10px; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header class="top">
+      <h1 class="title">
+        جدول الاختبارات
+        <span class="badge">EE • FINAL</span>
+      </h1>
+      <div class="subtitle">قسم الهندسة الكهربائية</div>
+
+      <div class="controls">
+        <div class="input">
+          <label for="studentId">الرقم الأكاديمي</label>
+          <input id="studentId" inputmode="numeric" autocomplete="off" placeholder="...3720874" />
+        </div>
+        <button class="btn" id="searchBtn">بحث</button>
+      </div>
+
+      <!-- 🌟 معلومات الطالب -->
+      <div class="student-info" id="studentInfo">
+        <div class="name" id="studentName"></div>
+        <div class="meta">
+          <span>🎓 <span id="studentIdDisplay"></span></span>
+          <span>📚 <span id="totalExams"></span> اختبار</span>
+        </div>
+      </div>
+
+      <!-- 🌟 العداد التنازلي -->
+      <div class="countdown" id="countdownBar"></div>
+
+      <!-- 🌟 إحصائيات -->
+      <div class="stats-bar" id="statsBar" style="display:none;">
+        <div class="stat-card">
+          <div class="num" id="statTotal">0</div>
+          <div class="lbl">إجمالي</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="statRemaining" style="color: var(--ee-lime);">0</div>
+          <div class="lbl">متبقية</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="statDone" style="color: var(--muted);">0</div>
+          <div class="lbl">منتهية</div>
+        </div>
+      </div>
+    </header>
+
+    <section class="results-wrap">
+      <div class="results">
+        <div class="r-head">
+          <div class="h-pill">المادة</div>
+          <div class="h-pill">التاريخ</div>
+          <div class="h-pill">الوقت</div>
+          <div class="h-pill">المدة</div>
+          <div class="h-pill">القاعة</div>
+          <div class="h-pill">المتبقي</div>
+        </div>
+
+        <div class="r-body" id="rows">
+          <div class="empty">
+            <i>🎓</i>
+            ابدأ بإدخال الرقم الأكاديمي للبحث
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // =====================================================
+    // 🌟 رابط ملف z.txt على Cloudflare R2
+    // =====================================================
+    const TXT_URL = 'https://pub-101fdd6dd9804e469cf398a5544982f8.r2.dev/z.txt';
+    let txtDataCache = null; // كاش (Map: studentId -> {name, exams[]})
+    let countdownTimer = null;
+
+    // Elements
+    const elStudentId = document.getElementById('studentId');
+    const elSearchBtn = document.getElementById('searchBtn');
+    const elRows = document.getElementById('rows');
+    const elStudentInfo = document.getElementById('studentInfo');
+    const elStudentName = document.getElementById('studentName');
+    const elStudentIdDisplay = document.getElementById('studentIdDisplay');
+    const elTotalExams = document.getElementById('totalExams');
+    const elCountdown = document.getElementById('countdownBar');
+    const elStatsBar = document.getElementById('statsBar');
+    const elStatTotal = document.getElementById('statTotal');
+    const elStatRemaining = document.getElementById('statRemaining');
+    const elStatDone = document.getElementById('statDone');
+
+    // =====================================================
+    // المساعدات
+    // =====================================================
+    function convertArabicToEnglishNumbers(str) {
+      const arabic = '٠١٢٣٤٥٦٧٨٩';
+      const english = '0123456789';
+      return String(str || '').split('').map(ch => {
+        const i = arabic.indexOf(ch);
+        return i !== -1 ? english[i] : ch;
+      }).join('');
+    }
+
+    function translateDayShort(s) {
+      const map = {
+        'Sun':'الأحد','Mon':'الاثنين','Tue':'الثلاثاء','Wed':'الأربعاء',
+        'Thu':'الخميس','Fri':'الجمعة','Sat':'السبت'
+      };
+      return map[s] || s || '';
+    }
+
+    function escapeHtml(s){
+      return String(s ?? '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    }
+
+    function formatDuration(raw) {
+      if (!raw) return "";
+      const h = raw.match(/(\d+)\s*H/i);
+      const m = raw.match(/(\d+)\s*M/i);
+      const hours = h ? Number(h[1]) : 0;
+      const minutes = m ? Number(m[1]) : 0;
+      if (hours && minutes) return `${hours}س ${minutes}د`;
+      if (hours) return `${hours}س`;
+      if (minutes) return `${minutes}د`;
+      return raw;
+    }
+
+    function formatTimeRange(raw) {
+      if (!raw) return { from: "", to: "" };
+      const parts = String(raw).split("-").map(p => p.trim());
+      return { from: parts[0] || "", to: parts[1] || "" };
+    }
+
+    function renderEmpty(msg, icon = '🎓') {
+      elRows.innerHTML = `<div class="empty"><i>${icon}</i>${escapeHtml(msg)}</div>`;
+    }
+
+    function renderLoading(msg) {
+      elRows.innerHTML = `<div class="empty"><span class="spinner"></span>${escapeHtml(msg)}</div>`;
+    }
+
+    function hideStudentInfo() {
+      elStudentInfo.classList.remove('show');
+      elCountdown.classList.remove('show');
+      elStatsBar.style.display = 'none';
+      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    }
+
+    // =====================================================
+    // 🌟 محلل ملف z.txt
+    // البنية: ID | Name | Code | CourseName | Section | Duration | Date(Day) | Time | Venue | Campus
+    // =====================================================
+    function parseTxtFile(text) {
+      const map = new Map(); // studentId -> { name, exams: [] }
+
+      for (const raw of text.split('\n')) {
+        const line = raw.trim();
+        if (!line) continue;
+
+        // الرقم الأكاديمي
+        const idMatch = line.match(/^(\d{7,})\s+/);
+        if (!idMatch) continue;
+        const studentId = idMatch[1];
+
+        // رمز المادة (يقبل مسافة اختيارية بين الحروف والأرقام مثل "MATH 110")
+        const afterId = line.slice(idMatch[0].length);
+        const codeMatch = afterId.match(/\b([A-Z]{2,5})\s*(\d{3,4}[A-Z]?)\b/);
+        if (!codeMatch) continue;
+        const courseCode = (codeMatch[1] + codeMatch[2]).trim(); // توحيد بدون مسافة
+
+        // اسم الطالب: ما بين الرقم ورمز المادة
+        const codeIdx = afterId.indexOf(codeMatch[0]);
+        const studentName = afterId.slice(0, codeIdx).trim();
+
+        // التاريخ
+        const dateMatch = line.match(/(\d{2}-\d{2}-\d{4})/);
+        if (!dateMatch) continue;
+
+        const dayMatch = line.match(/\((\w+)\)/);
+        const dayShort = dayMatch ? dayMatch[1] : '';
+        const dateStr = `${dateMatch[1]} (${dayShort})`;
+
+        // الوقت
+        const timeMatch = line.match(/(\d{1,2}:\d{2}\s*[AP]M\s*-\s*\d{1,2}:\d{2}\s*[AP]M)/i);
+        const timeStr = timeMatch ? timeMatch[1].replace(/\s+/g, ' ').trim() : '';
+
+        // المدة
+        const durMatch = line.match(/(\d+\s*H\s*\d+\s*M)/i);
+        const duration = durMatch ? durMatch[1].replace(/\s+/g, ' ').trim() : '-';
+
+        // اسم المادة: بين الكود والمدة
+        const afterCode = afterId.slice(codeIdx + codeMatch[0].length).trim();
+        const courseNameMatch = afterCode.match(/^(.*?)\s+\d+\s*[A-Z]?\s*\d+\s*H/i);
+        let courseName = courseNameMatch ? courseNameMatch[1].trim() : '';
+        // إزالة رقم السكشن من النهاية لو موجود (مثل "Database Systems 2")
+        courseName = courseName.replace(/\s+\d+\s*$/, '').trim();
+
+        // القاعة: بعد الوقت — صيغ متعددة:
+        // B0-138, B1-122 (بدون مسافة)
+        // AC 115, AC 247 (مع مسافة)
+        // ACX G15 (حرف + رقم مع حرف بداية)
+        let venue = '-';
+        if (timeMatch) {
+          const afterTime = line.slice(line.indexOf(timeMatch[0]) + timeMatch[0].length).trim();
+          // يلتقط: حروف (مع شرطة/أرقام اختيارية) + مسافة اختيارية + أرقام/حروف
+          const venueMatch = afterTime.match(/^([A-Z][A-Z0-9\-]*(?:\s+[A-Z0-9\-]+)?)/);
+          if (venueMatch) {
+            venue = venueMatch[1].replace(/\s+/g, ' ').trim();
+          }
+        }
+
+        const record = { courseCode, courseName, dateStr, dayShort, timeStr, duration, venue };
+
+        if (!map.has(studentId)) {
+          map.set(studentId, { name: studentName, exams: [] });
+        }
+        map.get(studentId).exams.push(record);
+      }
+      return map;
+    }
+
+    async function loadTxtData() {
+      if (txtDataCache) return txtDataCache;
+      const res = await fetch(TXT_URL, { cache: 'no-store' });
+      if (!res.ok) throw new Error('فشل تحميل ملف البيانات');
+      const text = await res.text();
+      txtDataCache = parseTxtFile(text);
+      return txtDataCache;
+    }
+
+    // =====================================================
+    // 🌟 حساب التوقيت
+    // =====================================================
+    function parseExamDateTime(dateStr, timeStr) {
+      const dMatch = String(dateStr || '').match(/(\d{2})-(\d{2})-(\d{4})/);
+      if (!dMatch) return null;
+      const dd = +dMatch[1], mm = +dMatch[2], yyyy = +dMatch[3];
+
+      const tMatch = String(timeStr || '').match(/(\d{1,2}):(\d{2})\s*([AP]M)/i);
+      let hh = 0, min = 0;
+      if (tMatch) {
+        hh = +tMatch[1]; min = +tMatch[2];
+        const ampm = tMatch[3].toUpperCase();
+        if (ampm === 'PM' && hh !== 12) hh += 12;
+        if (ampm === 'AM' && hh === 12) hh = 0;
+      }
+      return new Date(yyyy, mm - 1, dd, hh, min);
+    }
+
+    function getExamStatus(examDate) {
+      const now = new Date();
+      const diffMs = examDate - now;
+      const diffMin = Math.floor(diffMs / 60000);
+      const diffHrs = Math.floor(diffMin / 60);
+      const diffDays = Math.floor(diffHrs / 24);
+
+      if (diffMs < -90 * 60000) return { type: 'past', label: 'منتهي', tagClass: 'ok' };
+      if (diffDays === 0 && diffHrs >= 0) return { type: 'today', label: 'اليوم!', tagClass: 'danger' };
+      if (diffDays === 0 && diffHrs < 0) return { type: 'today', label: 'الآن', tagClass: 'danger' };
+      if (diffDays > 0 && diffDays <= 3) return { type: 'soon', label: `${diffDays} ${diffDays === 1 ? 'يوم' : 'أيام'}`, tagClass: 'warn' };
+      if (diffDays > 3) return { type: 'future', label: `${diffDays} يوم`, tagClass: 'ok' };
+      return { type: 'past', label: 'منتهي', tagClass: 'ok' };
+    }
+
+    // =====================================================
+    // 🌟 العداد التنازلي لأقرب اختبار
+    // =====================================================
+    function startCountdown(exams) {
+      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+
+      const now = new Date();
+      const upcoming = exams
+        .map(e => ({ exam: e, dt: parseExamDateTime(e.dateStr, e.timeStr) }))
+        .filter(x => x.dt && x.dt > now)
+        .sort((a, b) => a.dt - b.dt);
+
+      if (upcoming.length === 0) {
+        elCountdown.innerHTML = '🎉 انتهت جميع اختباراتك.. مبروك!';
+        elCountdown.classList.add('show');
+        return;
+      }
+
+      const next = upcoming[0];
+      function tick() {
+        const diffMs = next.dt - new Date();
+        if (diffMs <= 0) {
+          elCountdown.innerHTML = `⏰ اختبار <span class="code">${next.exam.courseCode}</span> بدأ الآن! بالتوفيق`;
+          clearInterval(countdownTimer);
+          return;
+        }
+        const days = Math.floor(diffMs / 86400000);
+        const hours = Math.floor((diffMs % 86400000) / 3600000);
+        const mins = Math.floor((diffMs % 3600000) / 60000);
+
+        if (days > 0) {
+          elCountdown.innerHTML = `🚀 متبقي <b>${days}</b> يوم و <b>${hours}</b> ساعة لاختبار <span class="code">${next.exam.courseCode}</span>`;
+        } else if (hours > 0) {
+          elCountdown.innerHTML = `🔥 متبقي <b>${hours}</b> ساعة و <b>${mins}</b> دقيقة لاختبار <span class="code">${next.exam.courseCode}</span>!`;
+        } else {
+          elCountdown.innerHTML = `⚡ متبقي <b>${mins}</b> دقيقة لاختبار <span class="code">${next.exam.courseCode}</span>!`;
+        }
+      }
+      tick();
+      countdownTimer = setInterval(tick, 60000);
+      elCountdown.classList.add('show');
+    }
+
+    // =====================================================
+    // 🌟 رسم الصفوف
+    // =====================================================
+    function renderRows(records) {
+      if (!records || records.length === 0) {
+        renderEmpty('لم يتم العثور على بيانات لهذا الرقم الأكاديمي', '🔍');
+        return;
+      }
+
+      // ترتيب حسب التاريخ
+      records.sort((a, b) => {
+        const da = parseExamDateTime(a.dateStr, a.timeStr);
+        const db = parseExamDateTime(b.dateStr, b.timeStr);
+        return (da?.getTime() || 0) - (db?.getTime() || 0);
+      });
+
+      // إحصائيات
+      let done = 0, remaining = 0;
+      records.forEach(r => {
+        const dt = parseExamDateTime(r.dateStr, r.timeStr);
+        if (dt && dt > new Date()) remaining++;
+        else done++;
+      });
+      elStatTotal.innerText = records.length;
+      elStatRemaining.innerText = remaining;
+      elStatDone.innerText = done;
+      elStatsBar.style.display = 'grid';
+
+      const html = records.map(r => {
+        const dMatch = r.dateStr.match(/(\d{2})-(\d{2})-(\d{4})/);
+        const mmdd = dMatch ? `${dMatch[1]}/${dMatch[2]}` : r.dateStr;
+        const dayAr = translateDayShort(r.dayShort);
+
+        const time = formatTimeRange(r.timeStr);
+        const examDt = parseExamDateTime(r.dateStr, r.timeStr);
+        const status = examDt ? getExamStatus(examDt) : { type: 'unknown', label: '-', tagClass: 'ok' };
+
+        return `
+          <div class="row ${status.type}" style="position:relative;">
+            <div class="cell course-cell">
+              <div class="course">${escapeHtml(r.courseCode)}</div>
+              ${r.courseName ? `<div class="course-name" title="${escapeHtml(r.courseName)}">${escapeHtml(r.courseName)}</div>` : ''}
+            </div>
+
+            <div class="cell">
+              <div class="two">
+                <div class="date-top">${escapeHtml(mmdd)}</div>
+                <div class="date-bot">${escapeHtml(dayAr)}</div>
+              </div>
+            </div>
+
+            <div class="cell">
+              <div class="two">
+                <div class="t-top">${escapeHtml(time.from)}</div>
+                <div class="t-bot">${escapeHtml(time.to)}</div>
+              </div>
+            </div>
+
+            <div class="cell duration">${escapeHtml(formatDuration(r.duration))}</div>
+            <div class="cell venue">${escapeHtml(r.venue || '-')}</div>
+            <div class="cell">
+              <span class="days-tag ${status.tagClass}">${escapeHtml(status.label)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      elRows.innerHTML = html;
+
+      // العداد التنازلي
+      startCountdown(records);
+    }
+
+    // =====================================================
+    // 🌟 البحث الرئيسي
+    // =====================================================
+    async function doSearch() {
+      const cleaned = convertArabicToEnglishNumbers(elStudentId.value).trim().replace(/\D/g, '');
+
+      if (!cleaned || cleaned.length < 5) {
+        renderEmpty('الرجاء إدخال الرقم الأكاديمي بشكل صحيح', '⚠️');
+        hideStudentInfo();
+        return;
+      }
+
+      renderLoading('جاري سحب جدولك من قاعدة البيانات...');
+      elSearchBtn.disabled = true;
+      hideStudentInfo();
+
+      try {
+        const dataMap = await loadTxtData();
+        const studentData = dataMap.get(cleaned);
+
+        if (!studentData || studentData.exams.length === 0) {
+          renderEmpty('لم يتم العثور على بيانات لهذا الرقم الأكاديمي', '🔍');
+          return;
+        }
+
+        // عرض معلومات الطالب
+        elStudentName.innerText = studentData.name;
+        elStudentIdDisplay.innerText = cleaned;
+        elTotalExams.innerText = studentData.exams.length;
+        elStudentInfo.classList.add('show');
+
+        renderRows(studentData.exams);
+
+      } catch (err) {
+        console.error(err);
+        renderEmpty('تعذر جلب البيانات. تحقق من الاتصال وحاول مجدداً', '❌');
+      } finally {
+        elSearchBtn.disabled = false;
+      }
+    }
+
+    // Events
+    elStudentId.addEventListener('input', (e) => {
+      e.target.value = convertArabicToEnglishNumbers(e.target.value).replace(/\D/g, '');
+    });
+
+    elStudentId.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
+    });
+
+    elSearchBtn.addEventListener('click', doSearch);
+
+    // Init
+    renderEmpty('ابدأ بإدخال الرقم الأكاديمي للبحث', '🎓');
+  </script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "ec99d6c134aa4b95b1784e3e67a43323"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
