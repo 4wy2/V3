@@ -252,7 +252,8 @@ main {
 #zoomValue { min-width: 43px; text-align: center; font: 12px var(--mono); color: var(--muted); }
 
 .viewport {
-  height: clamp(420px, 68dvh, 790px);
+  height: clamp(420px, 68vh, 790px);
+  height: clamp(420px, 68svh, 790px);
   overflow: auto;
   overscroll-behavior: contain;
   touch-action: none;
@@ -424,7 +425,7 @@ body.has-dock { padding-inline-start: min(340px, 100%); }
 
 /* ---------- 11. Tablet & phone: slim course bar ---------- */
 @media (max-width: 900px) {
-  .viewport { height: clamp(400px, 63dvh, 680px); }
+  .viewport { height: clamp(400px, 63vh, 680px); height: clamp(400px, 63svh, 680px); }
   body.has-dock { padding-inline-start: 0; padding-bottom: var(--dock-h, 0px); }
 
   #detail {
@@ -491,7 +492,7 @@ body.has-dock { padding-inline-start: min(340px, 100%); }
   .zoom-control { min-width: 36px; }
 
   /* the scaled map is short on phones: let the box hug it */
-  body:not(.list) .viewport { height: auto; max-height: min(68dvh, 620px); }
+  body:not(.list) .viewport { height: auto; max-height: min(68vh, 620px); max-height: min(68svh, 620px); }
 
   .hint { margin: 8px 2px; }
   .footer { padding: 0 4px; }
@@ -1078,7 +1079,7 @@ function flushCamera() {
   const width = MW * scale + "px", height = mapHeight * scale + "px", transform = `scale(${scale})`;
   if (space.style.width !== width) space.style.width = width;
   if (space.style.height !== height) space.style.height = height;
-  if (map.style.transform !== transform) map.style.transform = transform;
+  if (!pinchLive && map.style.transform !== transform) map.style.transform = transform;
   if (pendingCamera) {
     view.scrollLeft = pendingCamera.left;
     view.scrollTop = pendingCamera.top;
@@ -1104,7 +1105,9 @@ function applyScale() {
   queueCamera(position.left, position.top);
 }
 let resizeFrame = 0;
+let resizeLater = false;
 function resize() {
+  if (typeof pointers !== "undefined" && (pointers.size || pinchLive)) { resizeLater = true; return; }
   if (resizeFrame) return;
   resizeFrame = requestAnimationFrame(() => {
     resizeFrame = 0;
@@ -1564,7 +1567,10 @@ function stopPointer(e) {
   flushCamera();
   if (gestureMoved) suppressGestureClick = true;
   if (pointers.size) beginGesture();
-  else pinch = drag = null;
+  else {
+    pinch = drag = null;
+    if (resizeLater) { resizeLater = false; resize(); }
+  }
 }
 for (const event of ["pointerup", "pointercancel", "lostpointercapture"]) vp.addEventListener(event, stopPointer);
 window.addEventListener("blur", resetGestures);
