@@ -1048,6 +1048,7 @@ function scheduleDraw() {
 }
 function draw() {
   if (document.body.classList.contains("list")) return;
+  if (pinchLive) { scheduleDraw(); return; }
   if (geometryDirty) {
     flushCamera();
     const m = $("#map"),
@@ -1391,7 +1392,34 @@ $("#viewList").onclick = () => {
 // One gesture owner for mouse/touch; preserve native wheel scrolling and list behavior.
 const vp = $("#viewport"), pointers = new Map();
 let pinch = null, drag = null, gestureMoved = false, suppressGestureClick = false;
+// Pinch preview: while two fingers move, only a GPU transform changes (no layout, no scroll writes).
+// The real zoom (canvas size + scroll) is committed once, when the pinch ends.
+let pinchLive = null, pinchFrame = 0;
+function paintPinch() {
+  pinchFrame = 0;
+  if (!pinch || !pinchLive) return;
+  const { s, left, top } = pinchLive;
+  $("#map").style.transform = `translate3d(${pinch.left0 - left}px, ${pinch.top0 - top}px, 0) scale(${s})`;
+  textIfChanged($("#zoomValue"), Math.round(s * 100) + "%");
+}
+function commitPinch() {
+  if (pinchFrame) cancelAnimationFrame(pinchFrame);
+  pinchFrame = 0;
+  const live = pinchLive;
+  pinchLive = null;
+  $("#map").style.willChange = "";
+  if (!live) return;
+  scale = live.s;
+  $("#map").style.transform = "";      // flushCamera writes the committed scale
+  queueCamera(live.left, live.top);
+  flushCamera();
+}
+function clampCamera(s, left, top) {
+  const maxLeft = Math.max(0, MW * s - vp.clientWidth), maxTop = Math.max(0, mapHeight * s - vp.clientHeight);
+  return { left: Math.max(0, Math.min(maxLeft, left)), top: Math.max(0, Math.min(maxTop, top)) };
+}
 function resetGestures() {
+  commitPinch();
   for (const [id, point] of pointers) {
     if (point.target.hasPointerCapture(id)) point.target.releasePointerCapture(id);
   }
@@ -1400,12 +1428,17 @@ function resetGestures() {
   gestureMoved = suppressGestureClick = false;
 }
 function beginGesture() {
+  commitPinch();
+  flushCamera();
   const points = [...pointers.values()], position = cameraPosition();
   if (points.length >= 2) {
     const [a, b] = points, rect = vp.getBoundingClientRect();
     const x = (a.x + b.x) / 2 - rect.left, y = (a.y + b.y) / 2 - rect.top;
+    if (!mapHeight) mapHeight = $("#map").offsetHeight;
     pinch = { distance: Math.hypot(a.x - b.x, a.y - b.y), scale,
-      worldX: (position.left + x) / scale, worldY: (position.top + y) / scale, rect };
+      worldX: (position.left + x) / scale, worldY: (position.top + y) / scale, rect,
+      left0: vp.scrollLeft, top0: vp.scrollTop };
+    $("#map").style.willChange = "transform";
     gestureMoved = true;
   } else if (points.length) {
     drag = { ...points[0], left: position.left, top: position.top };
@@ -1431,10 +1464,11 @@ vp.addEventListener("pointermove", e => {
   pointers.set(e.pointerId, { ...previous, x: e.clientX, y: e.clientY });
   if (pointers.size >= 2 && pinch?.distance > 0) {
     const [a, b] = [...pointers.values()];
-    scale = Math.max(minScale(), Math.min(MAX_SCALE, pinch.scale * Math.hypot(a.x - b.x, a.y - b.y) / pinch.distance));
+    const s = Math.max(minScale(), Math.min(MAX_SCALE, pinch.scale * Math.hypot(a.x - b.x, a.y - b.y) / pinch.distance));
     autoFit = false;
-    queueCamera(pinch.worldX * scale - ((a.x + b.x) / 2 - pinch.rect.left),
-      pinch.worldY * scale - ((a.y + b.y) / 2 - pinch.rect.top));
+    pinchLive = { s, ...clampCamera(s, pinch.worldX * s - ((a.x + b.x) / 2 - pinch.rect.left),
+      pinch.worldY * s - ((a.y + b.y) / 2 - pinch.rect.top)) };
+    if (!pinchFrame) pinchFrame = requestAnimationFrame(paintPinch);
   } else if (drag) {
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     if (Math.hypot(dx, dy) > 6) gestureMoved = true;
@@ -1453,6 +1487,7 @@ vp.addEventListener("pointermove", e => {
 });
 function stopPointer(e) {
   if (!pointers.delete(e.pointerId)) return;
+  commitPinch();
   flushCamera();
   if (gestureMoved) suppressGestureClick = true;
   if (pointers.size) beginGesture();
@@ -1460,6 +1495,7 @@ function stopPointer(e) {
 }
 for (const event of ["pointerup", "pointercancel", "lostpointercapture"]) vp.addEventListener(event, stopPointer);
 window.addEventListener("blur", resetGestures);
+for (const type of ["gesturestart", "gesturechange", "gestureend"]) vp.addEventListener(type, e => e.preventDefault(), { passive: false });
 vp.addEventListener("click", e => {
   if (suppressGestureClick && e.detail !== 0) {
     suppressGestureClick = false;
