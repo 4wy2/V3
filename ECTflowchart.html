@@ -335,6 +335,8 @@ main {
 
 /* ---------- 7. List view ---------- */
 body.list .viewport { height: auto; overflow: visible; touch-action: auto; cursor: auto; }
+/* Map view: a downward drag must move the map, never trigger the browser's pull-to-refresh. */
+:root:has(body:not(.list)) { overscroll-behavior-y: none; }
 body.list .space { width: auto !important; height: auto !important; }
 body.list .map { position: relative; width: auto; padding: 15px; transform: none !important; -webkit-user-select: auto; user-select: auto; }
 body.list #lines, body.list .map-controls, body.list .legend > span:nth-child(-n + 2) { display: none; }
@@ -1496,6 +1498,9 @@ function stopPointer(e) {
 for (const event of ["pointerup", "pointercancel", "lostpointercapture"]) vp.addEventListener(event, stopPointer);
 window.addEventListener("blur", resetGestures);
 for (const type of ["gesturestart", "gesturechange", "gestureend"]) vp.addEventListener(type, e => e.preventDefault(), { passive: false });
+// Touches that start on the map belong to the map: block the browser's own pull-to-refresh / page bounce
+// (older iOS ignores overscroll-behavior). Page scrolling past the map's edge is still handed over by the drag code.
+vp.addEventListener("touchmove", e => { if (!document.body.classList.contains("list") && e.cancelable) e.preventDefault(); }, { passive: false });
 vp.addEventListener("click", e => {
   if (suppressGestureClick && e.detail !== 0) {
     suppressGestureClick = false;
