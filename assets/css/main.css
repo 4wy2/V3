@@ -214,3 +214,10 @@ html[lang="en"] .sig { font: italic 600 21px/1.3 Georgia, "Times New Roman", ser
 .footer .credit:hover .sig { filter: brightness(1.15); }
 .side-credit .sig { font-size: 22px; }
 html[lang="en"] .side-credit .sig { font-size: 18px; }
+
+/* Optional student account: visually aligned with the site's existing top bar. */
+.account-nav{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 .75rem;border-radius:10px;border:1px solid var(--line);background:var(--card-2);color:var(--text);font:inherit;font-size:.78rem;text-decoration:none;white-space:nowrap;cursor:pointer}
+.account-nav:hover,.account-nav:focus-visible{border-color:var(--accent)}
+.account-nav[hidden]{display:none!important}
+@media(max-width:480px){.account-nav{font-size:.73rem;padding:0 .5rem}.topbar-inner{gap:.4rem}}
+@media(max-width:560px){#eeLoginButton{display:none!important}}
