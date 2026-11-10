@@ -45,6 +45,7 @@
       <a href="faculty.html"><i class="fa-solid fa-user-tie" aria-hidden="true"></i><span data-i18n="navFaculty">بحث هيئة التدريس</span></a>
       <a href="schedule.html"><i class="fa-solid fa-calendar-plus" aria-hidden="true"></i><span data-i18n="schedule">أنشئ جدولك</span></a>
       <a href="certificates.html"><i class="fa-solid fa-award" aria-hidden="true"></i><span data-i18n="navCerts">الشهادات</span></a>
+      <a href="account.html"><i class="fa-solid fa-user-circle" aria-hidden="true"></i><span>حسابي / My account</span></a>
       <hr />
       <a href="https://jic.blackboard.com" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><span data-i18n="blackboard">البلاك بورد</span></a>
     </nav>
@@ -63,6 +64,8 @@
         </div>
       </a>
       <div class="prefs">
+        <a id="eeAccountLink" class="account-nav" href="account.html" aria-label="حسابي">حسابي</a>
+        <button id="eeLoginButton" type="button" class="account-nav account-login" hidden>تسجيل Google</button>
         <button id="languageToggle" class="pref-btn" type="button" aria-label="Switch to English">EN</button>
         <button id="themeToggle" class="pref-btn" type="button" aria-label="الوضع الفاتح"><i class="fa-solid fa-sun" aria-hidden="true"></i></button>
       </div>
@@ -123,6 +126,8 @@
     </div>
   </footer>
 
+  <script defer src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script defer src="assets/js/identity.js"></script>
   <script src="assets/js/homepage.js"></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "ec99d6c134aa4b95b1784e3e67a43323"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
